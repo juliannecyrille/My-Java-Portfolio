@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Appliance Inventory Control Hub</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script>
+        tailwind.config = { darkMode: 'class' }
+    </script>
+    <style>
+        .lucide {
+            stroke-width: 2.5px;
+            display: inline-block;
+            vertical-align: middle;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-900 min-h-screen p-4 sm:p-8 transition-colors duration-200 dark:bg-slate-950 dark:text-slate-100" id="body-ctx">
+
+    <div class="max-w-5xl mx-auto space-y-6">
+        
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-white dark:bg-slate-900 p-6 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-800 gap-4">
+            <div class="flex items-center gap-3">
+                <div class="p-3 bg-indigo-600/10 text-indigo-600 dark:text-indigo-400 rounded-xl">
+                    <i data-lucide="layout-grid" class="w-8 h-8"></i>
+                </div>
+                <div>
+                    <h1 class="text-3xl font-black tracking-tight text-indigo-600 dark:text-indigo-400">StockControl</h1>
+                    <p class="text-slate-500 dark:text-slate-400 text-sm">Appliance Inventory Management Dashboard</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-3 bg-slate-100 dark:bg-slate-800 p-2.5 rounded-xl border border-slate-200 dark:border-slate-700">
+                <span class="text-slate-600 dark:text-slate-500 flex items-center font-bold"><i data-lucide="sun" class="w-4 h-4 mr-1"></i> Light</span>
+                <label class="relative inline-flex items-center cursor-pointer">
+                    <input type="checkbox" id="theme-toggle" onchange="toggleThemeMode()" class="sr-only peer">
+                    <div class="w-11 h-6 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
+                </label>
+                <span class="text-slate-400 dark:text-slate-400 flex items-center"><i data-lucide="moon" class="w-4 h-4 mr-1"></i> Dark</span>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div class="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm flex items-center justify-between">
+                <div>
+                    <span class="text-sm font-bold text-slate-400 uppercase tracking-wider block mb-1">Total Stock</span>
+                    <span id="stat-total-stock" class="text-2xl font-black text-slate-800 dark:text-white">0</span>
+                </div>
+                <div class="text-emerald-500 p-3 bg-emerald-500/10 rounded-xl">
+                    <i data-lucide="package" class="w-6 h-6"></i>
+                </div>
+            </div>
+            
+            <div onclick="setFilterCriteria('LOW')" class="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-rose-200 dark:border-rose-950/40 hover:border-rose-500 transition-all shadow-sm cursor-pointer hover:scale-[1.02] active:scale-[0.98] group flex items-center justify-between">
+                <div>
+                    <span class="text-sm font-bold text-slate-400 group-hover:text-rose-400 transition-colors uppercase tracking-wider block mb-1">Critical Alerts</span>
+                    <span id="stat-low-stock" class="text-2xl font-black text-rose-500">0</span>
+                </div>
+                <div class="text-rose-500 p-3 bg-rose-500/10 rounded-xl group-hover:bg-rose-500 group-hover:text-white transition-colors">
+                    <i data-lucide="alert-triangle" class="w-6 h-6"></i>
+                </div>
+            </div>
+
+            <div class="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm flex items-center justify-between">
+                <div>
+                    <span class="text-sm font-bold text-slate-400 uppercase tracking-wider block mb-1">Appliance SKUs</span>
+                    <span id="stat-total-items" class="text-2xl font-black text-slate-800 dark:text-white">0</span>
+                </div>
+                <div class="text-indigo-500 p-3 bg-indigo-500/10 rounded-xl">
+                    <i data-lucide="boxes" class="w-6 h-6"></i>
+                </div>
+            </div>
+
+            <div class="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm flex items-center justify-between">
+                <div>
+                    <span class="text-sm font-bold text-slate-400 uppercase tracking-wider block mb-1">Sync Live</span>
+                    <span class="text-sm font-black text-indigo-500 uppercase tracking-wide flex items-center gap-1.5 mt-2">
+                        <span class="h-2 w-2 rounded-full bg-indigo-500 animate-ping"></span> Live Connected
+                    </span>
+                </div>
+                <div class="text-slate-400 p-3 bg-slate-100 dark:bg-slate-800 rounded-xl">
+                    <i data-lucide="refresh-cw" class="w-6 h-6"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="flex flex-col md:flex-row gap-3 justify-between items-center bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-md">
+            <div class="relative w-full md:w-72 flex items-center">
+                <i data-lucide="search" class="w-4 h-4 text-slate-400 absolute left-3 pointer-events-none"></i>
+                <input id="search-bar" type="text" oninput="filterAndRenderDOM()" placeholder="Search by name or SKU..." class="w-full bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl pl-9 pr-4 py-2.5 text-sm focus:outline-none focus:border-indigo-500 text-slate-900 dark:text-white">
+            </div>
+            <div class="flex flex-wrap items-center gap-1.5 w-full md:w-auto">
+                <button id="filter-all-btn" onclick="setFilterCriteria('ALL')" class="filter-btn px-3.5 py-1.5 rounded-lg text-sm font-bold tracking-wide transition-all bg-indigo-600 text-white">ALL</button>
+                <button id="filter-kitchen-btn" onclick="setFilterCriteria('Kitchen Appliances')" class="filter-btn px-3.5 py-1.5 rounded-lg text-sm font-bold tracking-wide transition-all bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 flex items-center gap-1"><i data-lucide="cooking-pot" class="w-3.5 h-3.5"></i> KITCHEN</button>
+                <button id="filter-living-btn" onclick="setFilterCriteria('Living Room Tech')" class="filter-btn px-3.5 py-1.5 rounded-lg text-sm font-bold tracking-wide transition-all bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 flex items-center gap-1"><i data-lucide="tv" class="w-3.5 h-3.5"></i> LIVING ROOM</button>
+                <button id="filter-low-btn" onclick="setFilterCriteria('LOW')" class="filter-btn px-3.5 py-1.5 rounded-lg text-sm font-bold tracking-wide transition-all bg-slate-100 dark:bg-slate-800 text-rose-500 flex items-center gap-1"><i data-lucide="alert-triangle" class="w-3.5 h-3.5"></i> ALERTS</button>
+            </div>
+            <button onclick="toggleRegistrationModal(true)" class="w-full md:w-auto bg-indigo-600 hover:bg-indigo-500 transition-colors text-white font-bold text-sm uppercase tracking-wider px-5 py-3 rounded-xl shadow-lg shadow-indigo-600/10 flex items-center justify-center gap-1.5">
+                <i data-lucide="plus" class="w-4 h-4"></i> Add Appliance
+            </button>
+        </div>
+
+        <div id="inventory-grid" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+
+        <div class="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xl">
+            <h3 class="text-sm font-bold uppercase tracking-wider text-slate-400 mb-3 flex items-center gap-2">
+                <i data-lucide="clipboard-list" class="w-4 h-4 text-indigo-500"></i> System Operations History Audit Log
+            </h3>
+            <div id="log-ledger" class="space-y-2 max-h-48 overflow-y-auto text-sm font-mono division-y division-slate-800/40">
+                <p class="text-slate-500 italic">No operational transactions compiled in this session.</p>
+            </div>
+        </div>
+    </div>
+
+    <div id="registration-modal" class="hidden fixed inset-0 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+        <div class="bg-white dark:bg-slate-900 w-full max-w-md rounded-2xl border border-slate-200 dark:border-slate-800 p-6 shadow-2xl space-y-4">
+            <div class="flex justify-between items-center">
+                <h3 class="text-lg font-bold text-slate-900 dark:text-white">Register New Appliance Asset</h3>
+                <button onclick="toggleRegistrationModal(false)" class="text-slate-400 hover:text-slate-200 text-xl font-bold">&times;</button>
+            </div>
+            <div class="space-y-3 text-sm">
+                <div>
+                    <label class="block text-sm font-bold text-slate-400 uppercase mb-1">Appliance Name</label>
+                    <input id="modal-name" type="text" placeholder="e.g., Smart Air Purifier" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-2.5 text-slate-900 dark:text-white">
+                </div>
+                <div>
+                    <label class="block text-sm font-bold text-slate-400 uppercase mb-1">Category</label>
+                    <select id="modal-category" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-2.5 text-slate-900 dark:text-white">
+                        <option value="Kitchen Appliances">Kitchen Appliances</option>
+                        <option value="Living Room Tech">Living Room Tech</option>
+                    </select>
+                </div>
+                <div class="grid grid-cols-3 gap-2">
+                    <div>
+                        <label class="block text-sm font-bold text-slate-400 uppercase mb-1">Initial Stock</label>
+                        <input id="modal-stock" type="number" min="0" value="10" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-2.5 text-slate-900 dark:text-white">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold text-slate-400 uppercase mb-1">Min Level</label>
+                        <input id="modal-min" type="number" min="0" value="3" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-2.5 text-slate-900 dark:text-white">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold text-slate-400 uppercase mb-1">Max Capacity</label>
+                        <input id="modal-max" type="number" min="1" value="20" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-2.5 text-slate-900 dark:text-white">
+                    </div>
+                </div>
+            </div>
+            <div class="flex justify-end gap-2 pt-2">
+                <button onclick="toggleRegistrationModal(false)" class="px-4 py-2 text-sm font-bold text-slate-400 uppercase">Cancel</button>
+                <button onclick="submitNewAppliance()" class="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-sm uppercase rounded-xl shadow-md flex items-center gap-1"><i data-lucide="plus-circle" class="w-4 h-4"></i> Save Asset</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="toast-bin" class="fixed bottom-5 right-5 z-50 space-y-2 pointer-events-none"></div>
+
+    <script>
+        let cachedInventory = [];
+        let activeFilter = 'ALL';
+
+        async function pullCoreEngineAPI() {
+            try {
+                const res = await fetch('/api/data');
+                cachedInventory = await res.json();
+                recalculateMatrixStats();
+                filterAndRenderDOM();
+            } catch (err) {
+                spawnToastNotification("Engine Communication Error", "CRITICAL");
+            }
+        }
+
+        function recalculateMatrixStats() {
+            let totalUnits = 0;
+            let criticalUnits = 0;
+            cachedInventory.forEach(item => {
+                totalUnits += item.stock;
+                if(item.stock <= item.minStock) criticalUnits++;
+            });
+            document.getElementById('stat-total-stock').innerText = totalUnits;
+            document.getElementById('stat-low-stock').innerText = criticalUnits;
+            document.getElementById('stat-total-items').innerText = cachedInventory.length;
+        }
+
+        function setFilterCriteria(criteria) {
+            activeFilter = criteria;
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.classList.remove('bg-indigo-600', 'text-white');
+                btn.classList.add('bg-slate-100', 'dark:bg-slate-800', 'text-slate-600', 'dark:text-slate-400');
+            });
+            
+            let targetedId = 'filter-all-btn';
+            if (criteria === 'Kitchen Appliances') targetedId = 'filter-kitchen-btn';
+            if (criteria === 'Living Room Tech') targetedId = 'filter-living-btn';
+            if (criteria === 'LOW') targetedId = 'filter-low-btn';
+            
+            document.getElementById(targetedId).classList.remove('bg-slate-100', 'dark:bg-slate-800', 'text-slate-600', 'dark:text-slate-400');
+            document.getElementById(targetedId).classList.add('bg-indigo-600', 'text-white');
+            
+            filterAndRenderDOM();
+        }
+
+        function filterAndRenderDOM() {
+            const grid = document.getElementById('inventory-grid');
+            const searchVal = document.getElementById('search-bar').value.toLowerCase();
+            grid.innerHTML = '';
+
+            let targetItems = cachedInventory.filter(item => {
+                const matchSearch = item.name.toLowerCase().includes(searchVal) || item.sku.toLowerCase().includes(searchVal);
+                if (activeFilter === 'ALL') return matchSearch;
+                if (activeFilter === 'LOW') return matchSearch && item.stock <= item.minStock;
+                return matchSearch && item.category === activeFilter;
+            });
+
+            if(targetItems.length === 0) {
+                grid.innerHTML = `
+                    <div class="col-span-full bg-white dark:bg-slate-900 p-12 text-center rounded-2xl border border-dashed border-slate-300 dark:border-slate-800">
+                        <i data-lucide="boxes" class="w-12 h-12 text-slate-400 mx-auto mb-2"></i>
+                        <h4 class="font-bold text-slate-700 dark:text-slate-300">No Hardware Units Located</h4>
+                        <p class="text-sm text-slate-400 mt-1">Adjust filtering criteria or register a new appliance asset.</p>
+                    </div>`;
+                lucide.createIcons();
+                return;
+            }
+
+            targetItems.forEach(item => {
+                const percent = Math.min(100, Math.round((item.stock / item.max) * 100));
+                
+                let stateLabel = "Healthy";
+                let badgeStyle = "bg-emerald-500/10 text-emerald-500 border-emerald-500/20";
+                let barColor = "bg-emerald-500";
+                let statusIcon = "check-circle";
+                
+                if(item.stock === 0) { 
+                    stateLabel = "Out of Stock"; 
+                    badgeStyle = "bg-rose-500/10 text-rose-500 border border-rose-500/20";
+                    barColor = "bg-rose-600"; 
+                    statusIcon = "x-circle";
+                } else if(item.stock <= item.minStock) { 
+                    stateLabel = "Low Stock"; 
+                    badgeStyle = "bg-amber-500/10 text-amber-500 border border-amber-500/20";
+                    barColor = "bg-amber-500 animate-pulse"; 
+                    statusIcon = "alert-triangle";
+                }
+
+                grid.innerHTML += `
+                    <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-5 shadow-lg flex flex-col justify-between transition-transform duration-150 hover:scale-[1.01]">
+                        <div>
+                            <div class="flex justify-between items-start mb-2">
+                                <div>
+                                    <h3 class="font-extrabold text-base tracking-tight text-slate-800 dark:text-slate-100">${item.name}</h3>
+                                    <span class="text-[12px] text-slate-400 uppercase tracking-widest font-bold font-mono">${item.sku}</span>
+                                </div>
+                                <span class="text-[13px] font-mono font-bold px-2.5 py-0.5 rounded-lg flex items-center gap-1 ${badgeStyle}">
+                                    <i data-lucide="${statusIcon}" class="w-3.5 h-3.5"></i> ${stateLabel}
+                                </span>
+                            </div>
+
+                            <div class="grid grid-cols-2 gap-y-1 gap-x-4 bg-slate-50 dark:bg-slate-800/30 p-2.5 rounded-xl text-[12px] text-slate-500 dark:text-slate-400 font-medium">
+                                <div class="flex justify-between border-b border-slate-200/50 dark:border-slate-800/50 pb-0.5"><span>Category:</span> <span class="text-slate-700 dark:text-slate-300 font-semibold">${item.category.split(' ')[0]}</span></div>
+                                <div class="flex justify-between border-b border-slate-200/50 dark:border-slate-800/50 pb-0.5"><span>Min Stock:</span> <span class="text-slate-700 dark:text-slate-300 font-mono">${item.minStock}</span></div>
+                                <div class="flex justify-between"><span>Supplier:</span> <span class="text-slate-700 dark:text-slate-300 truncate max-w-[90px]">${item.supplier}</span></div>
+                                <div class="flex justify-between"><span>Updated:</span> <span class="text-indigo-400 font-mono">${item.lastUpdated}</span></div>
+                            </div>
+
+                            <div class="my-4 space-y-1">
+                                <div class="flex justify-between text-sm font-bold text-slate-500">
+                                    <span>Stock Level (${percent}%)</span>
+                                    <span class="dark:text-slate-300 text-slate-800 font-mono">${item.stock} / ${item.max} Units</span>
+                                </div>
+                                <div class="w-full bg-slate-100 dark:bg-slate-800 h-2.5 rounded-full overflow-hidden flex">
+                                    <div class="${barColor} h-full transition-all duration-300" style="width: ${percent}%"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="flex gap-2 pt-3 border-t border-slate-100 dark:border-slate-800/60">
+                            <button onclick="commitInlineDelta(${item.id}, -1)" class="w-full border border-slate-200 dark:border-slate-700 hover:bg-rose-500/10 hover:border-rose-500/30 transition-all py-2 text-sm font-bold rounded-xl text-slate-600 dark:text-slate-400 hover:text-rose-500 dark:hover:text-rose-400 flex justify-center items-center gap-1">
+                                <i data-lucide="trash" class="w-3.5 h-3.5"></i> Remove
+                            </button>
+                            <button onclick="commitInlineDelta(${item.id}, 1)" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white transition-colors py-2 text-sm font-black rounded-xl flex justify-center items-center gap-1">
+                                <i data-lucide="plus-circle" class="w-3.5 h-3.5"></i> Replenish
+                            </button>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            lucide.createIcons();
+        }
+
+        async function commitInlineDelta(id, delta) {
+            const matchItem = cachedInventory.find(i => i.id === id);
+            if (!matchItem) return;
+            let targetQty = matchItem.stock + delta;
+            if (targetQty < 0) return spawnToastNotification("Operational Lower Limit Violation", "WARNING");
+            if (targetQty > matchItem.max) return spawnToastNotification(`Operational Max Limit is ${matchItem.max}`, "WARNING");
+
+            const res = await fetch(`/api/update?id=${id}&qty=${targetQty}`);
+            cachedInventory = await res.json();
+            
+            appendAuditTrail(matchItem.name, matchItem.stock, targetQty);
+            spawnToastNotification(`Updated ${matchItem.name} Inventory`, "SUCCESS");
+            recalculateMatrixStats();
+            filterAndRenderDOM();
+        }
+
+        function appendAuditTrail(name, prev, next) {
+            const ledger = document.getElementById('log-ledger');
+            if(ledger.innerHTML.includes("No operational transactions")) ledger.innerHTML = '';
+            const timestamp = new Date().toLocaleTimeString();
+            const actionSymbol = next > prev ? "📈 [RESTOCK]" : "📉 [DISPATCH]";
+            ledger.innerHTML = `<p class="py-1 border-b border-slate-100 dark:border-slate-800/40 text-slate-400"><span class="text-indigo-400 font-bold">[${timestamp}]</span> <span class="${next > prev ? 'text-emerald-400' : 'text-amber-400'}">${actionSymbol}</span> ${name}: ${prev} → <span class="text-slate-800 dark:text-white font-bold">${next}</span></p>` + ledger.innerHTML;
+        }
+
+        function spawnToastNotification(msg, severity) {
+            const bin = document.getElementById('toast-bin');
+            let borderStyle = "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-800 dark:text-white";
+            if(severity === "SUCCESS") borderStyle = "bg-emerald-600 text-white font-bold";
+            if(severity === "WARNING") borderStyle = "bg-amber-500 text-slate-950 font-bold";
+            
+            const toast = document.createElement('div');
+            toast.className = `p-3.5 rounded-xl border shadow-2xl text-sm flex items-center justify-between min-w-[240px] transition-all duration-300 opacity-0 transform translate-y-2 ${borderStyle}`;
+            toast.innerHTML = `<span>${msg}</span>`;
+            bin.appendChild(toast);
+            
+            setTimeout(() => { toast.classList.remove('opacity-0', 'translate-y-2'); }, 5);
+            setTimeout(() => { 
+                toast.classList.add('opacity-0', 'translate-y-2');
+                setTimeout(() => { toast.remove(); }, 300);
+            }, 3000);
+        }
+
+        // CHANGED: Inverted target execution matching logic to treat false/unchecked as Light Mode first
+        function toggleThemeMode() {
+            const body = document.getElementById('body-ctx');
+            const toggle = document.getElementById('theme-toggle');
+            if(toggle.checked) {
+                body.classList.add('dark');
+                body.classList.remove('bg-slate-50', 'text-slate-900');
+                body.classList.add('bg-slate-950', 'text-slate-100');
+            } else {
+                body.classList.remove('dark');
+                body.classList.remove('bg-slate-950', 'text-slate-100');
+                body.classList.add('bg-slate-50', 'text-slate-900');
+            }
+        }
+
+        function toggleRegistrationModal(show) {
+            document.getElementById('registration-modal').classList.toggle('hidden', !show);
+        }
+
+        async function submitNewAppliance() {
+            const name = document.getElementById('modal-name').value.trim();
+            const category = document.getElementById('modal-category').value;
+            const stock = document.getElementById('modal-stock').value;
+            const min = document.getElementById('modal-min').value;
+            const max = document.getElementById('modal-max').value;
+
+            if(!name || stock === '' || max === '') return alert("Please map all fields correctly.");
+
+            const url = `/api/add?name=${encodeURIComponent(name)}&category=${encodeURIComponent(category)}&stock=${stock}&min=${min}&max=${max}`;
+            const res = await fetch(url);
+            cachedInventory = await res.json();
+            
+            spawnToastNotification(`Registered Asset ${name}`, "SUCCESS");
+            toggleRegistrationModal(false);
+            document.getElementById('modal-name').value = '';
+            recalculateMatrixStats();
+            filterAndRenderDOM();
+        }
+
+        // CHANGED: Initial call matches Light Mode configuration now
+        toggleThemeMode();
+        pullCoreEngineAPI();
+    </script>
+</body>
+</html>
