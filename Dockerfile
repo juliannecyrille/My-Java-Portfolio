@@ -1,5 +1,5 @@
-# Use the correct official lightweight Java image path
-FROM openjdk:17-jdk-slim
+# Use eclipse-temurin since the legacy openjdk image has been deprecated
+FROM eclipse-temurin:17-jdk
 
 # Set the working directory inside the cloud container
 WORKDIR /app
